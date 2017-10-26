@@ -1,0 +1,13 @@
+<div>({{displayRange?.skip + 1}} - {{displayRange?.skip + displayRange?.take}}) / 1000 {{id?.item.id}}</div>
+<virtual-scroll
+  [itemHeight]="64"
+  [listLength]="1000"
+  [items]="items"
+  (rangeChanged)="onRangeChanged($event)"
+  (itemChanged)="onItemChanged($event)"
+  (displayRangeChanged)="onDisplayRangeChanged($event)">
+  <app-list-item *virtualScrollItem="let item"
+    [item]="item"
+    [ngClass]="{'active': item.id == selectedItem?.item.id}">
+  </app-list-item>
+</virtual-scroll>

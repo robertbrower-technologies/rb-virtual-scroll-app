@@ -1,0 +1,6 @@
+<div [ngStyle]="{'height': scrollHeight+'px'}"></div>
+<div #listContainer [ngStyle]="{'transform': 'translateY(' + scrollTop + 'px)', 'margin-top': marginTop + 'px'}">
+  <span *ngFor="let item of items.items; let i=index;" (click)="updateItem(item, i)">
+      <ng-container *ngTemplateOutlet="virtualScrollItemTemplate; context: {$implicit: item}"></ng-container>
+  </span>
+</div>
