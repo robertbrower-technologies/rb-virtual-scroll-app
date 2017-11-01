@@ -37,24 +37,19 @@ export class ListComponent implements OnInit {
   }
   
   onRangeChanged(range: Range) {
-    this.selectedItem = null;
     this.range = range;
   }
 
   onItemChanged(item: Item) {
-    this.range = null;
     this.selectedItem = item;
   }
 
   updateItems() {
-    if (this.range) {
-      this.getItemsByRange();
-    }
-
     if (this.selectedItem) {
       this.getItemsByItem();
+    } else if (this.range) {
+      this.getItemsByRange();
     }
-
   }
 
   getItemsByRange() {
@@ -66,8 +61,8 @@ export class ListComponent implements OnInit {
   }
 
   getItemsByItem() {
-    let item = new Item(this.selectedItem.item, this.selectedItem.index, this.selectedItem.take);
-    this.list.getItemsByItem(item.item, item.index, item.take)
+    let item = new Item(this.selectedItem.item, this.selectedItem.index, this.selectedItem.range);
+    this.list.getItemsByItem(item.item, item.index, item.range.take)
       .subscribe(items => {
         let range = new Range(items.range.skip, items.range.take);
         this.items = new VirtualScrollItems(items.items, range);

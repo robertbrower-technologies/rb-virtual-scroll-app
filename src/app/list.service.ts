@@ -25,18 +25,18 @@ export class ListService {
       items: items,
       range: undefined
     };
-    return Observable.of(listItems).delay(DELAY);
+    return Observable.of(listItems).delay(DELAY);;
   }
 
   public getItemsByItem(selectedItem: any, viewIndex: number, take: number): Observable<ListItems> {
-    console.log(`ListService getById skip=${selectedItem.id} viewIndex=${viewIndex} take=${take}`);
+    console.log(`ListService getById id=${selectedItem.id} viewIndex=${viewIndex} take=${take}`);
     let itemIndex = MockData.findIndex(item => item.id === selectedItem.id);
     let skip = itemIndex - viewIndex;
     let listItems: ListItems = {
       items: MockData.slice(skip, skip+take),
       range: { skip: skip, take: take }
     };
-    return Observable.of(listItems).delay(DELAY);
+    return Observable.of(listItems).delay(DELAY);;
   }
 
 }

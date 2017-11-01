@@ -15,6 +15,9 @@ import { VirtualScrollItems } from './virtual-scroll-items';
 export class VirtualScrollComponent implements OnInit {
 
   @Input()
+  public itemKey: string = 'id';
+
+  @Input()
   public itemHeight: number = 0;
 
   @Input()
@@ -56,8 +59,14 @@ export class VirtualScrollComponent implements OnInit {
 
   ngOnInit() {
     this.scrollHeight = this.listLength * this.itemHeight;
-    this.rangeSubject.debounceTime(250).subscribe(range => this.rangeChanged.emit(this.range));
-    this.itemSubject.debounceTime(250).subscribe(item => this.itemChanged.emit(this.item));
+    this.rangeSubject.debounceTime(250).subscribe(range => {
+      this.range = range;
+      this.rangeChanged.emit(this.range);
+    });
+    this.itemSubject.debounceTime(250).subscribe(item => {
+      this.item = item;
+      this.itemChanged.emit(this.item);
+    });
   }
 
   ngAfterViewInit() {
@@ -68,7 +77,7 @@ export class VirtualScrollComponent implements OnInit {
   ngOnChanges(changes: SimpleChanges) {
     if (changes.items.currentValue.range &&
         changes.items.currentValue.range.isEqual(this.range)) {
-      this.marginTop = 0;
+      this.marginTop = this.marginTop % this.itemHeight;
     }
   }
 
@@ -97,8 +106,11 @@ export class VirtualScrollComponent implements OnInit {
   }
 
   private updateItem(item, index) {
-    this.item = new Item(item, index, this.numVisibleItems);
-    this.itemSubject.next(this.item);
+    if (this.item && this.item.item[this.itemKey] === item[this.itemKey]) {
+      this.itemSubject.next(null);
+    } else {
+      this.itemSubject.next(new Item(item, index, this.range));
+    }
   }
 
 }

@@ -1,4 +1,4 @@
-<div>({{displayRange?.skip + 1}} - {{displayRange?.skip + displayRange?.take}}) / 1000 {{id?.item.id}}</div>
+<div>({{displayRange?.skip + 1}} - {{displayRange?.skip + displayRange?.take}}) / {{items?.items?.length}} ID: {{id?.item.id}}</div>
 <virtual-scroll
   [itemHeight]="64"
   [listLength]="1000"
