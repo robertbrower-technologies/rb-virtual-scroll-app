@@ -40,7 +40,7 @@ export class ListComponent implements OnInit {
     this.range = range;
   }
 
-  onItemChanged(item: Item) {
+  onSelectedItemChanged(item: Item) {
     this.selectedItem = item;
   }
 
@@ -53,19 +53,25 @@ export class ListComponent implements OnInit {
   }
 
   getItemsByRange() {
-    let range = new Range(this.range.skip, this.range.take);
-    this.list.getItemsByRange(range.skip, range.take)
+    this.list.getItemsByRange(this.range.skip, this.range.take)
       .subscribe(items => {
-        this.items = new VirtualScrollItems(items.items, range);
+        let range = new Range(items.range.skip, items.range.take);
+        if (range.isEqual(this.range)) {
+          this.items = new VirtualScrollItems(items.items, range);
+        }
       });
   }
 
   getItemsByItem() {
-    let item = new Item(this.selectedItem.item, this.selectedItem.index, this.selectedItem.range);
-    this.list.getItemsByItem(item.item, item.index, item.range.take)
+    //let selectedItem = new Item(this.selectedItem.item, this.selectedItem.index, new Range(this.selectedItem.range.skip, this.selectedItem.range.take));
+    this.list.getItemsByItem(this.selectedItem.item, this.selectedItem.index, this.range.skip - this.selectedItem.range.skip, this.selectedItem.range.take)
       .subscribe(items => {
         let range = new Range(items.range.skip, items.range.take);
-        this.items = new VirtualScrollItems(items.items, range);
+        //if (range.isEqual(this.selectedItem.range)) {
+          // dont update while scrolling
+          debugger;
+          this.items = new VirtualScrollItems(items.items, range);
+        //}
       });
   }
 

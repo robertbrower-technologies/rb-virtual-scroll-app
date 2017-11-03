@@ -30,8 +30,6 @@ export class VirtualScrollComponent implements OnInit {
 
   public scrollTop: number = 0;
 
-  public lastScrollTop: number = 0;
-
   public numVisibleItems: number = 0;
 
   @ViewChild('listContainer')
@@ -47,25 +45,33 @@ export class VirtualScrollComponent implements OnInit {
 
   @Output() displayRangeChanged: EventEmitter<Range> = new EventEmitter<Range>();
 
-  private item: Item;
+  private selectedItem: Item;
 
-  private itemSubject: Subject<Item> = new Subject<Item>();
+  private selectedItemSubject: Subject<Item> = new Subject<Item>();
   
-  @Output() itemChanged: EventEmitter<Item> = new EventEmitter<Item>();
+  @Output() selectedItemChanged: EventEmitter<Item> = new EventEmitter<Item>();
 
   marginTop: number = 0;
+
+  scrolling: boolean = false;
+
+  userScrolled: boolean = true;
   
-  constructor() { }
+  constructor(private elementRef: ElementRef) { }
 
   ngOnInit() {
     this.scrollHeight = this.listLength * this.itemHeight;
     this.rangeSubject.debounceTime(250).subscribe(range => {
       this.range = range;
+      if (this.selectedItem) {
+        this.updateSelectedItem();
+      }
       this.rangeChanged.emit(this.range);
+      this.scrolling = false;
     });
-    this.itemSubject.debounceTime(250).subscribe(item => {
-      this.item = item;
-      this.itemChanged.emit(this.item);
+    this.selectedItemSubject.debounceTime(250).subscribe(item => {
+      this.selectedItem = item;
+      this.selectedItemChanged.emit(this.selectedItem);
     });
   }
 
@@ -75,9 +81,14 @@ export class VirtualScrollComponent implements OnInit {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.items.currentValue.range &&
-        changes.items.currentValue.range.isEqual(this.range)) {
-      this.marginTop = this.marginTop % this.itemHeight;
+    if (!this.scrolling) {
+      if (changes.items && changes.items.currentValue.range) {
+        this.marginTop = this.marginTop % this.itemHeight;
+        if (!changes.items.currentValue.range.isEqual(this.range)) {
+          this.userScrolled = false;
+          this.elementRef.nativeElement.scrollTop = changes.items.currentValue.range.skip * this.itemHeight;
+        }
+      }
     }
   }
 
@@ -89,10 +100,16 @@ export class VirtualScrollComponent implements OnInit {
 
   @HostListener('scroll', ['$event'])
   onScroll(event) {
-    this.lastScrollTop = this.scrollTop;
+    this.scrolling = true;
+    let lastScrollTop = this.scrollTop;
     this.scrollTop = event.srcElement.scrollTop;
-    this.marginTop += this.lastScrollTop - this.scrollTop;
+
+    if (this.userScrolled) {
+      this.marginTop += lastScrollTop - this.scrollTop;  
+    }
+
     this.updateRange();
+    this.userScrolled = true;
   }
   
   private updateNumVisibleItems() {
@@ -100,16 +117,22 @@ export class VirtualScrollComponent implements OnInit {
   }
 
   private updateRange() {
-    this.range = new Range(Math.floor(this.scrollTop / this.itemHeight), this.numVisibleItems);
-    this.rangeSubject.next(this.range);
-    this.displayRangeChanged.emit(this.range)
+    let range = new Range(Math.floor(this.scrollTop / this.itemHeight), this.numVisibleItems);
+    this.rangeSubject.next(range);
+    this.displayRangeChanged.emit(range)
   }
 
-  private updateItem(item, index) {
-    if (this.item && this.item.item[this.itemKey] === item[this.itemKey]) {
-      this.itemSubject.next(null);
+  private onSelectedItemClick(item, index) {
+    if (this.selectedItem && this.selectedItem.item[this.itemKey] === item[this.itemKey]) {
+      this.selectedItemSubject.next(null);
     } else {
-      this.itemSubject.next(new Item(item, index, this.range));
+      this.selectedItemSubject.next(new Item(item, index, this.range));
+    }
+  }
+
+  private updateSelectedItem() {
+    if (this.selectedItem) {
+      this.selectedItemSubject.next(new Item(this.selectedItem.item, this.selectedItem.index, this.range));
     }
   }
 

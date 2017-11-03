@@ -1,8 +1,11 @@
 export class ListItem {
+
     id: number;
-    first_name: string;
-    last_name: string;
-    email: string;
-    gender: string;
-    ip_address: string;
+    
+    lastUpdated?: number;
+
+    constructor(id: number, lastUpdated?: number) {
+        this.id = id;
+        this.lastUpdated = lastUpdated ? lastUpdated : (new Date()).getTime();
+    }
 }
