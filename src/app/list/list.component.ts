@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Subscription } from "rxjs/Subscription";
 import { TimerObservable } from "rxjs/observable/TimerObservable";
-
 import { ListService } from '../list.service';
 import { ListItem } from '../list-item';
 import { Range } from '../rb-virtual-scroll/virtual-scroll/range';
@@ -23,7 +22,11 @@ export class ListComponent implements OnInit {
 
   public selectedItem: Item;
 
+  private scrolling: boolean;
+
   public items: VirtualScrollItems = new VirtualScrollItems();
+
+  private getItemsCallback: Function = this.getItemsByRange;
 
   constructor(private list: ListService) { }
 
@@ -34,21 +37,31 @@ export class ListComponent implements OnInit {
 
   onDisplayRangeChanged(range: Range) {
     this.displayRange = range;
+    console.log(`ListComponent onDisplayRangeChanged() this.displayRange=${JSON.stringify(this.displayRange)}`);
   }
   
   onRangeChanged(range: Range) {
     this.range = range;
+    console.log(`ListComponent onRangeChanged() this.range=${JSON.stringify(this.range)}`);
   }
 
-  onSelectedItemChanged(item: Item) {
-    this.selectedItem = item;
+  onScrollingChanged(scrolling: boolean) {
+    this.scrolling = scrolling;
+    this.getItemsCallback = this.getItemsByRange;
+    console.log(`ListComponent onScrollingChanged() this.scrolling=${this.scrolling}`);
+  }
+
+  onSelectedItemChanged(selectedItem: Item) {
+    if (!this.selectedItem || (this.selectedItem && this.selectedItem.item.id !== selectedItem.item.id)) {
+      this.getItemsCallback = this.getItemsById;
+    }
+    this.selectedItem = selectedItem;
+    console.log(`ListComponent onSelectedItemChanged() this.selectedItem=${JSON.stringify(this.selectedItem)}`);
   }
 
   updateItems() {
-    if (this.selectedItem) {
-      this.getItemsByItem();
-    } else if (this.range) {
-      this.getItemsByRange();
+    if (!this.scrolling) {
+      this.getItemsCallback();
     }
   }
 
@@ -56,22 +69,19 @@ export class ListComponent implements OnInit {
     this.list.getItemsByRange(this.range.skip, this.range.take)
       .subscribe(items => {
         let range = new Range(items.range.skip, items.range.take);
-        if (range.isEqual(this.range)) {
+        if (range.isEqual(this.range) && this.getItemsCallback === this.getItemsByRange) {
           this.items = new VirtualScrollItems(items.items, range);
         }
       });
   }
 
-  getItemsByItem() {
-    //let selectedItem = new Item(this.selectedItem.item, this.selectedItem.index, new Range(this.selectedItem.range.skip, this.selectedItem.range.take));
-    this.list.getItemsByItem(this.selectedItem.item, this.selectedItem.index, this.range.skip - this.selectedItem.range.skip, this.selectedItem.range.take)
+  getItemsById() {
+    this.list.getItemsById(this.selectedItem.item.id, this.selectedItem.viewIndex, this.range.take)
       .subscribe(items => {
         let range = new Range(items.range.skip, items.range.take);
-        //if (range.isEqual(this.selectedItem.range)) {
-          // dont update while scrolling
-          debugger;
+        if (this.getItemsCallback === this.getItemsById) {
           this.items = new VirtualScrollItems(items.items, range);
-        //}
+        }
       });
   }
 

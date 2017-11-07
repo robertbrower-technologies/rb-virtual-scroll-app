@@ -55,6 +55,8 @@ export class VirtualScrollComponent implements OnInit {
 
   scrolling: boolean = false;
 
+  @Output() scrollingChanged: EventEmitter<boolean> = new EventEmitter<boolean>();
+
   userScrolled: boolean = true;
   
   constructor(private elementRef: ElementRef) { }
@@ -63,11 +65,11 @@ export class VirtualScrollComponent implements OnInit {
     this.scrollHeight = this.listLength * this.itemHeight;
     this.rangeSubject.debounceTime(250).subscribe(range => {
       this.range = range;
-      if (this.selectedItem) {
-        this.updateSelectedItem();
-      }
+      // if (this.selectedItem) {
+      //   this.updateSelectedItem();
+      // }
       this.rangeChanged.emit(this.range);
-      this.scrolling = false;
+      this.updateScrolling(false);
     });
     this.selectedItemSubject.debounceTime(250).subscribe(item => {
       this.selectedItem = item;
@@ -100,18 +102,28 @@ export class VirtualScrollComponent implements OnInit {
 
   @HostListener('scroll', ['$event'])
   onScroll(event) {
-    this.scrolling = true;
     let lastScrollTop = this.scrollTop;
     this.scrollTop = event.srcElement.scrollTop;
 
     if (this.userScrolled) {
-      this.marginTop += lastScrollTop - this.scrollTop;  
+      this.updateScrolling(true);
+      this.marginTop += lastScrollTop - this.scrollTop;
     }
 
     this.updateRange();
     this.userScrolled = true;
   }
-  
+
+  public onSelectedItemClick(item, viewIndex) {
+    if (this.selectedItem) {
+      if (this.selectedItem.item[this.itemKey] !== item[this.itemKey]) {
+        this.selectedItemSubject.next(new Item(item, viewIndex));
+      }
+    } else {
+      this.selectedItemSubject.next(new Item(item, viewIndex));
+    }
+  }
+
   private updateNumVisibleItems() {
     this.numVisibleItems = Math.ceil(this.listContainer.nativeElement.offsetHeight / this.itemHeight);
   }
@@ -122,18 +134,17 @@ export class VirtualScrollComponent implements OnInit {
     this.displayRangeChanged.emit(range)
   }
 
-  private onSelectedItemClick(item, index) {
-    if (this.selectedItem && this.selectedItem.item[this.itemKey] === item[this.itemKey]) {
-      this.selectedItemSubject.next(null);
-    } else {
-      this.selectedItemSubject.next(new Item(item, index, this.range));
+  private updateScrolling(scrolling: boolean) {
+    if (this.scrolling !== scrolling) {
+      this.scrolling = scrolling;
+      this.scrollingChanged.emit(this.scrolling);
     }
   }
 
-  private updateSelectedItem() {
-    if (this.selectedItem) {
-      this.selectedItemSubject.next(new Item(this.selectedItem.item, this.selectedItem.index, this.range));
-    }
-  }
+  // private updateSelectedItem() {
+  //   if (this.selectedItem) {
+  //     this.selectedItemSubject.next(new Item(this.selectedItem.item, this.selectedItem.viewIndex));
+  //   }
+  // }
 
 }

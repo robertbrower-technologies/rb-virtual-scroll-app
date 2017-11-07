@@ -32,7 +32,7 @@ export class ListService {
   private updateItems() {
     let randomIndex = Math.floor((Math.random() * (LIST_LENGTH - 1)));
     this.list[randomIndex].lastUpdated = (new Date()).getTime();
-    console.log(`updated id=${this.list[randomIndex].id}`);
+    //console.log(`updated id=${this.list[randomIndex].id}`);
     this.sortList();
   }
 
@@ -41,12 +41,12 @@ export class ListService {
   }
 
   public getListLength(): Observable<number> {
-    console.log(`ListService getListLength`);
+    //console.log(`ListService getListLength`);
     return Observable.of(this.list.length).delay(DELAY);
   }
 
   public getItemsByRange(skip: number, take: number): Observable<ListItems> {
-    console.log(`ListService getByRange skip=${skip} take=${take}`);
+    //console.log(`ListService getItemsByRange skip=${skip} take=${take}`);
     let items: ListItem[] = this.list.slice(skip, skip+take);
     let listItems: ListItems = {
       items: items,
@@ -55,12 +55,11 @@ export class ListService {
     return Observable.of(listItems).delay(DELAY);;
   }
 
-  public getItemsByItem(selectedItem: any, viewIndex: number, offset: number, take: number): Observable<ListItems> {
-    console.log(`ListService getById id=${selectedItem.id} viewIndex=${viewIndex} offset=${offset} take=${take}`);
-    let itemIndex = this.list.findIndex(item => item.id === selectedItem.id);
+  public getItemsById(id: number, viewIndex: number, take: number): Observable<ListItems> {
+    //console.log(`ListService getItemsById id=${id} viewIndex=${viewIndex} take=${take}`);
+    let itemIndex = this.list.findIndex(item => item.id === id);
     if (itemIndex >= 0) {
       let skip = itemIndex - viewIndex;
-      skip += offset;
       let listItems: ListItems = {
         items: this.list.slice(skip, skip+take),
         range: { skip: skip, take: take }

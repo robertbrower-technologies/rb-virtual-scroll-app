@@ -1,16 +1,11 @@
-import { Range } from './range';
-
 export class Item {
 
     public item: any;
     
-    public index: number;
+    public viewIndex: number;
 
-    public range: Range;
-
-    constructor(item: any, index: number, range: Range) {
+    constructor(item: any, viewIndex: number) {
         this.item = item;
-        this.index = index;
-        this.range = range;
+        this.viewIndex = viewIndex;
     }
 }
