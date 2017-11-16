@@ -25,14 +25,13 @@ export class ListService {
       this.list.push(new ListItem(id, (new Date()).getTime() - id * 1000));
     }
     this.sortList();
-    let timer = TimerObservable.create(UPDATE_INTERVAL, UPDATE_INTERVAL);
-    this.timer$ = timer.subscribe(t => this.updateItems());
+    // let timer = TimerObservable.create(UPDATE_INTERVAL, UPDATE_INTERVAL);
+    // this.timer$ = timer.subscribe(t => this.updateItems());
   }
 
   private updateItems() {
     let randomIndex = Math.floor((Math.random() * (LIST_LENGTH - 1)));
     this.list[randomIndex].lastUpdated = (new Date()).getTime();
-    //console.log(`updated id=${this.list[randomIndex].id}`);
     this.sortList();
   }
 
@@ -41,37 +40,30 @@ export class ListService {
   }
 
   public getListLength(): Observable<number> {
-    //console.log(`ListService getListLength`);
     return Observable.of(this.list.length).delay(DELAY);
   }
 
   public getItemsByRange(skip: number, take: number): Observable<ListItems> {
-    //console.log(`ListService getItemsByRange skip=${skip} take=${take}`);
     let items: ListItem[] = this.list.slice(skip, skip+take);
     let listItems: ListItems = {
+      length: this.list.length,
       items: items,
       range: { skip: skip, take: take }
     };
     return Observable.of(listItems).delay(DELAY);;
   }
 
-  public getItemsById(id: number, viewIndex: number, take: number): Observable<ListItems> {
-    //console.log(`ListService getItemsById id=${id} viewIndex=${viewIndex} take=${take}`);
+  public getItemsById(id: number, viewIndex: number, skip: number, take: number): Observable<ListItems> {
     let itemIndex = this.list.findIndex(item => item.id === id);
-    if (itemIndex >= 0) {
-      let skip = itemIndex - viewIndex;
-      let listItems: ListItems = {
-        items: this.list.slice(skip, skip+take),
-        range: { skip: skip, take: take }
-      };
-      return Observable.of(listItems).delay(DELAY);
-    } else {
-      let listItems: ListItems = {
-        items: [],
-        range: { skip: NaN, take: take }
-      };
-      return Observable.of(listItems).delay(DELAY);
-    }
+    let found = itemIndex >= 0;
+    let itemSkip = itemIndex - viewIndex;
+    let skipToUse = found ? itemSkip : skip;
+    let listItems: ListItems = {
+      length: this.list.length,
+      items: found ? this.list.slice(skipToUse, skipToUse+take) : new Array<ListItem>(),
+      range: { skip: skipToUse, take: take }
+    };
+    return Observable.of(listItems).delay(DELAY);
     
   }
 

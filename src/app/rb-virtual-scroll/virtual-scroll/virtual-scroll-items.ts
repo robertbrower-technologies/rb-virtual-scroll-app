@@ -2,11 +2,14 @@ import { Range } from './range';
 
 export class VirtualScrollItems {
 
-    items: any[];
+    length: number = 0;
 
-    range: Range;
+    items: Array<any> = new Array<any>();
 
-    constructor(items?: any[], range?: Range) {
+    range: Range = new Range(0, 0);
+
+    constructor(length?: number, items?: any[], range?: Range) {
+        this.length = length;
         this.items = items;
         this.range = range;
     }

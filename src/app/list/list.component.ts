@@ -14,25 +14,46 @@ import { VirtualScrollItems } from '../rb-virtual-scroll/virtual-scroll/virtual-
 })
 export class ListComponent implements OnInit {
 
-  private timer$: Subscription;
-
-  private displayRange: Range;
-
-  private range: Range;
+  public displayRange: Range;
 
   public selectedItem: Item;
 
+  public listLength: number = 0;
+
+  public items: Array<ListItem> = new Array<ListItem>();
+
+  public range: Range = new Range(0, 0);
+
+  private timer$: Subscription;
+
   private scrolling: boolean;
 
-  public items: VirtualScrollItems = new VirtualScrollItems();
-
   private getItemsCallback: Function = this.getItemsByRange;
+
+  private getListLength$: Subscription;
+
+  private getItemsByRange$: Subscription;
+
+  private getItemsById$: Subscription;
 
   constructor(private list: ListService) { }
 
   ngOnInit() {
-    let timer = TimerObservable.create(1000, 1000);
-    this.timer$ = timer.subscribe(t => this.updateItems());
+    this.getListLength();
+  }
+
+  ngOnDestroy() {
+    if (this.getListLength$) {
+      this.getListLength$.unsubscribe();
+    }
+    
+    if (this.getItemsByRange$) {
+      this.getItemsByRange$.unsubscribe();
+    }
+
+    if (this.getItemsById$) {
+      this.getItemsById$.unsubscribe();
+    }
   }
 
   onDisplayRangeChanged(range: Range) {
@@ -61,28 +82,54 @@ export class ListComponent implements OnInit {
 
   updateItems() {
     if (!this.scrolling) {
+      console.log('ListComponent updateItems()');
       this.getItemsCallback();
     }
   }
 
-  getItemsByRange() {
-    this.list.getItemsByRange(this.range.skip, this.range.take)
-      .subscribe(items => {
-        let range = new Range(items.range.skip, items.range.take);
-        if (range.isEqual(this.range) && this.getItemsCallback === this.getItemsByRange) {
-          this.items = new VirtualScrollItems(items.items, range);
-        }
+  getListLength() {
+    this.getListLength$ = this.list.getListLength()
+      .subscribe(listLength => {
+        this.getListLength$.unsubscribe();
+        this.getListLength$ = null;
+        this.listLength = listLength;
+        let timer = TimerObservable.create(1000, 1000);
+        this.timer$ = timer.subscribe(t => this.updateItems());
       });
   }
 
-  getItemsById() {
-    this.list.getItemsById(this.selectedItem.item.id, this.selectedItem.viewIndex, this.range.take)
+  getItemsByRange() {
+    if (!this.getItemsByRange$) {
+      this.getItemsByRange$ = this.list.getItemsByRange(this.range.skip, this.range.take)
       .subscribe(items => {
+        this.getItemsByRange$.unsubscribe();
+        this.getItemsByRange$ = null;
         let range = new Range(items.range.skip, items.range.take);
-        if (this.getItemsCallback === this.getItemsById) {
-          this.items = new VirtualScrollItems(items.items, range);
+        if (range.isEqual(this.range) && this.getItemsCallback === this.getItemsByRange) {
+          this.listLength = items.length;
+          console.log('ListComponent getItemsByRange()');
+          this.items = items.items;
+          this.range = range;
         }
       });
+    }
+  }
+
+  getItemsById() {
+    if (!this.getItemsById$) {
+      this.getItemsById$ = this.list.getItemsById(this.selectedItem.item.id, this.selectedItem.viewIndex, this.range.skip, this.range.take)
+      .subscribe(items => {
+        this.getItemsById$.unsubscribe();
+        this.getItemsById$ = null;
+        let range = new Range(items.range.skip, items.range.take);
+        if (this.getItemsCallback === this.getItemsById) {
+          this.listLength = items.length;
+          console.log('ListComponent getItemsById()');
+          this.items = items.items;
+          this.range = range;
+        }
+      });
+    }
   }
 
 }

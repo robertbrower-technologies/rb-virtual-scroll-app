@@ -20,15 +20,52 @@ export class VirtualScrollComponent implements OnInit {
   @Input()
   public itemHeight: number = 0;
 
-  @Input()
-  public listLength: number = 0;
+  public _listLength: number = 0;
 
   @Input()
-  public items: VirtualScrollItems = new VirtualScrollItems();
+  set listLength(value: number) {
+    this._listLength = value;
+    this.updateScrollHeight();
+  }
+
+  public _items: Array<any> = new Array<any>();
+
+  @Input()
+  set items(value: Array<any>) {
+    this._items = value;
+    
+    // let scrollDirectionChangeModifier =
+    //   this.scrollDirection !== this.lastScrollDirection ? this.itemHeight * this.scrollDirection * -1 : 0;
+    this.marginTop = this.marginTop % this.itemHeight;// + scrollDirectionChangeModifier;
+    //this.scrollDirection = 0;
+    //console.log(`VirtualScrollComponent set items this.scrollDirection=${this.scrollDirection} this.lastScrollDirection=${this.lastScrollDirection} scrollDirectionChangeModifier=${scrollDirectionChangeModifier} this.marginTop=${this.marginTop}`);
+  }
+
+  private _range: Range = new Range(0, 0);
+
+  @Input()
+  set range(value: Range) {
+    if (value && !this.scrolling) {
+      if (!value.isEqual(this._range)) {
+        this._range = value;
+        this.userScrolled = false;
+        this.elementRef.nativeElement.scrollTop = this._range.skip * this.itemHeight;
+        console.log(`VirtualScrollComponent set range ${JSON.stringify(this._range)}`);
+      }
+    }
+  }
 
   public scrollHeight: number = 0;
 
   public scrollTop: number = 0;
+
+  // private scrollChange: number = 0;
+
+  // private scrollDirection: number = 0;
+
+  // private lastScrollDirection: number = 0;
+
+  // private lastScrollChange: number = 0;
 
   public numVisibleItems: number = 0;
 
@@ -36,8 +73,6 @@ export class VirtualScrollComponent implements OnInit {
   private listContainer: ElementRef;
 
   @ContentChild(VirtualScrollItemDirective, {read: TemplateRef}) virtualScrollItemTemplate;
-
-  private range: Range;
 
   private rangeSubject: Subject<Range> = new Subject<Range>();
   
@@ -51,9 +86,9 @@ export class VirtualScrollComponent implements OnInit {
   
   @Output() selectedItemChanged: EventEmitter<Item> = new EventEmitter<Item>();
 
-  marginTop: number = 0;
+  private marginTop: number = 0;
 
-  scrolling: boolean = false;
+  private scrolling: boolean = false;
 
   @Output() scrollingChanged: EventEmitter<boolean> = new EventEmitter<boolean>();
 
@@ -62,14 +97,11 @@ export class VirtualScrollComponent implements OnInit {
   constructor(private elementRef: ElementRef) { }
 
   ngOnInit() {
-    this.scrollHeight = this.listLength * this.itemHeight;
+    this.updateScrollHeight();
     this.rangeSubject.debounceTime(250).subscribe(range => {
-      this.range = range;
-      // if (this.selectedItem) {
-      //   this.updateSelectedItem();
-      // }
-      this.rangeChanged.emit(this.range);
+      this._range = range;
       this.updateScrolling(false);
+      this.rangeChanged.emit(this._range);
     });
     this.selectedItemSubject.debounceTime(250).subscribe(item => {
       this.selectedItem = item;
@@ -78,24 +110,14 @@ export class VirtualScrollComponent implements OnInit {
   }
 
   ngAfterViewInit() {
+    this.updateScrollHeight();
     this.updateNumVisibleItems()
     this.updateRange();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (!this.scrolling) {
-      if (changes.items && changes.items.currentValue.range) {
-        this.marginTop = this.marginTop % this.itemHeight;
-        if (!changes.items.currentValue.range.isEqual(this.range)) {
-          this.userScrolled = false;
-          this.elementRef.nativeElement.scrollTop = changes.items.currentValue.range.skip * this.itemHeight;
-        }
-      }
-    }
-  }
-
   @HostListener('window:resize', ['$event'])
   onResize(event){
+    this.updateScrollHeight();
     this.updateNumVisibleItems();
     this.updateRange();
   }
@@ -108,6 +130,16 @@ export class VirtualScrollComponent implements OnInit {
     if (this.userScrolled) {
       this.updateScrolling(true);
       this.marginTop += lastScrollTop - this.scrollTop;
+      
+      // this.lastScrollChange = this.scrollChange;
+      // this.scrollChange = lastScrollTop - this.scrollTop;
+      // this.lastScrollDirection = this.scrollDirection;
+      // if (this.lastScrollChange >= 0 && this.scrollChange < 0) {
+      //   this.scrollDirection = -1;
+      // } else if (this.lastScrollChange <= 0 && this.scrollChange > 0) {
+      //   this.scrollDirection = 1;
+      // }
+            
     }
 
     this.updateRange();
@@ -122,6 +154,11 @@ export class VirtualScrollComponent implements OnInit {
     } else {
       this.selectedItemSubject.next(new Item(item, viewIndex));
     }
+  }
+
+  private updateScrollHeight() {
+    console.log('VirtualScrollComponent updateScrollHeight()');
+    this.scrollHeight = this._listLength * this.itemHeight;
   }
 
   private updateNumVisibleItems() {
@@ -140,11 +177,5 @@ export class VirtualScrollComponent implements OnInit {
       this.scrollingChanged.emit(this.scrolling);
     }
   }
-
-  // private updateSelectedItem() {
-  //   if (this.selectedItem) {
-  //     this.selectedItemSubject.next(new Item(this.selectedItem.item, this.selectedItem.viewIndex));
-  //   }
-  // }
 
 }
