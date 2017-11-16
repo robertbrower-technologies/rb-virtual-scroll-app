@@ -2,10 +2,9 @@ import { Component, EventEmitter, HostListener, Input, Output, OnInit, AfterView
 import { Subject } from "rxjs/Subject";
 import 'rxjs/add/operator/debounceTime';
 
-import { Range } from './range';
-import { Item } from './item';
+import { VirtualScrollRange } from './virtual-scroll-range';
+import { VirtualScrollItem } from './virtual-scroll-item';
 import { VirtualScrollItemDirective } from './virtual-scroll-item.directive';
-//import { VirtualScrollItems } from './virtual-scroll-items';
 
 @Component({
   selector: 'virtual-scroll',
@@ -43,10 +42,10 @@ export class VirtualScrollComponent implements OnInit {
     console.log(`VirtualScrollComponent set items this.scrollDirection=${this.scrollDirection} this.lastScrollDirection=${this.lastScrollDirection} scrollDirectionChangeModifier=${scrollDirectionChangeModifier} this.marginTop=${this.marginTop}`);
   }
 
-  private _range: Range = new Range(0, 0);
+  private _range: VirtualScrollRange = new VirtualScrollRange(0, 0);
 
   @Input()
-  set range(value: Range) {
+  set range(value: VirtualScrollRange) {
     if (value && !this.scrolling) {
       if (!value.isEqual(this._range)) {
         this._range = value;
@@ -76,17 +75,17 @@ export class VirtualScrollComponent implements OnInit {
 
   @ContentChild(VirtualScrollItemDirective, {read: TemplateRef}) virtualScrollItemTemplate;
 
-  private rangeSubject: Subject<Range> = new Subject<Range>();
+  private rangeSubject: Subject<VirtualScrollRange> = new Subject<VirtualScrollRange>();
   
-  @Output() rangeChanged: EventEmitter<Range> = new EventEmitter<Range>();
+  @Output() rangeChanged: EventEmitter<VirtualScrollRange> = new EventEmitter<VirtualScrollRange>();
 
-  @Output() displayRangeChanged: EventEmitter<Range> = new EventEmitter<Range>();
+  @Output() displayRangeChanged: EventEmitter<VirtualScrollRange> = new EventEmitter<VirtualScrollRange>();
 
-  private selectedItem: Item;
+  private selectedItem: VirtualScrollItem;
 
-  private selectedItemSubject: Subject<Item> = new Subject<Item>();
+  private selectedItemSubject: Subject<VirtualScrollItem> = new Subject<VirtualScrollItem>();
   
-  @Output() selectedItemChanged: EventEmitter<Item> = new EventEmitter<Item>();
+  @Output() selectedItemChanged: EventEmitter<VirtualScrollItem> = new EventEmitter<VirtualScrollItem>();
 
   private marginTop: number = 0;
 
@@ -153,10 +152,10 @@ export class VirtualScrollComponent implements OnInit {
   public onSelectedItemClick(item, viewIndex) {
     if (this.selectedItem) {
       if (this.selectedItem.item[this.itemKey] !== item[this.itemKey]) {
-        this.selectedItemSubject.next(new Item(item, viewIndex));
+        this.selectedItemSubject.next(new VirtualScrollItem(item, viewIndex));
       }
     } else {
-      this.selectedItemSubject.next(new Item(item, viewIndex));
+      this.selectedItemSubject.next(new VirtualScrollItem(item, viewIndex));
     }
   }
 
@@ -170,7 +169,7 @@ export class VirtualScrollComponent implements OnInit {
   }
 
   private updateRange() {
-    let range = new Range(Math.floor(this.scrollTop / this.itemHeight), this.numVisibleItems);
+    let range = new VirtualScrollRange(Math.floor(this.scrollTop / this.itemHeight), this.numVisibleItems);
     this.rangeSubject.next(range);
     this.displayRangeChanged.emit(range)
   }

@@ -1,28 +1,27 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, AfterViewInit } from '@angular/core';
 import { Subscription } from "rxjs/Subscription";
 import { TimerObservable } from "rxjs/observable/TimerObservable";
 import { ListService } from '../list.service';
 import { ListItem } from '../list-item';
-import { Range } from '../rb-virtual-scroll/virtual-scroll/range';
-import { Item } from '../rb-virtual-scroll/virtual-scroll/item';
-//import { VirtualScrollItems } from '../rb-virtual-scroll/virtual-scroll/virtual-scroll-items';
+import { VirtualScrollRange } from '../rb-virtual-scroll/virtual-scroll/virtual-scroll-range';
+import { VirtualScrollItem } from '../rb-virtual-scroll/virtual-scroll/virtual-scroll-item';
 
 @Component({
   selector: 'app-list',
   templateUrl: './list.component.html',
   styleUrls: ['./list.component.css']
 })
-export class ListComponent implements OnInit {
+export class ListComponent implements AfterViewInit {
 
-  public displayRange: Range;
+  public displayRange: VirtualScrollRange;
 
-  public selectedItem: Item;
+  public selectedItem: VirtualScrollItem;
 
   public listLength: number = 0;
 
   public items: Array<ListItem> = new Array<ListItem>();
 
-  public range: Range = new Range(0, 0);
+  public range: VirtualScrollRange = new VirtualScrollRange(0, 0);
 
   private timer$: Subscription;
 
@@ -38,7 +37,7 @@ export class ListComponent implements OnInit {
 
   constructor(private list: ListService) { }
 
-  ngOnInit() {
+  ngAfterViewInit() {
     this.getListLength();
   }
 
@@ -56,12 +55,12 @@ export class ListComponent implements OnInit {
     }
   }
 
-  onDisplayRangeChanged(range: Range) {
+  onDisplayRangeChanged(range: VirtualScrollRange) {
     this.displayRange = range;
     console.log(`ListComponent onDisplayRangeChanged() this.displayRange=${JSON.stringify(this.displayRange)}`);
   }
   
-  onRangeChanged(range: Range) {
+  onRangeChanged(range: VirtualScrollRange) {
     this.range = range;
     console.log(`ListComponent onRangeChanged() this.range=${JSON.stringify(this.range)}`);
   }
@@ -72,7 +71,7 @@ export class ListComponent implements OnInit {
     console.log(`ListComponent onScrollingChanged() this.scrolling=${this.scrolling}`);
   }
 
-  onSelectedItemChanged(selectedItem: Item) {
+  onSelectedItemChanged(selectedItem: VirtualScrollItem) {
     if (!this.selectedItem || (this.selectedItem && this.selectedItem.item.id !== selectedItem.item.id)) {
       this.getItemsCallback = this.getItemsById;
     }
@@ -104,10 +103,10 @@ export class ListComponent implements OnInit {
       .subscribe(items => {
         this.getItemsByRange$.unsubscribe();
         this.getItemsByRange$ = null;
-        let range = new Range(items.range.skip, items.range.take);
+        let range = new VirtualScrollRange(items.range.skip, items.range.take);
         if (range.isEqual(this.range) && this.getItemsCallback === this.getItemsByRange) {
-          this.listLength = items.length;
           console.log('ListComponent getItemsByRange()');
+          this.listLength = items.length;
           this.items = items.items;
           this.range = range;
         }
@@ -121,10 +120,10 @@ export class ListComponent implements OnInit {
       .subscribe(items => {
         this.getItemsById$.unsubscribe();
         this.getItemsById$ = null;
-        let range = new Range(items.range.skip, items.range.take);
+        let range = new VirtualScrollRange(items.range.skip, items.range.take);
         if (this.getItemsCallback === this.getItemsById) {
-          this.listLength = items.length;
           console.log('ListComponent getItemsById()');
+          this.listLength = items.length;
           this.items = items.items;
           this.range = range;
         }

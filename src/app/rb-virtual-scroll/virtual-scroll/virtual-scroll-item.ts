@@ -1,4 +1,4 @@
-export class Item {
+export class VirtualScrollItem {
 
     public item: any;
     

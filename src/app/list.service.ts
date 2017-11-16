@@ -25,8 +25,8 @@ export class ListService {
       this.list.push(new ListItem(id, (new Date()).getTime() - id * 1000));
     }
     this.sortList();
-    // let timer = TimerObservable.create(UPDATE_INTERVAL, UPDATE_INTERVAL);
-    // this.timer$ = timer.subscribe(t => this.updateItems());
+    let timer = TimerObservable.create(UPDATE_INTERVAL, UPDATE_INTERVAL);
+    this.timer$ = timer.subscribe(t => this.updateItems());
   }
 
   private updateItems() {

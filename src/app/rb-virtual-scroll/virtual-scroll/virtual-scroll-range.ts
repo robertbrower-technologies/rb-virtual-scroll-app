@@ -1,4 +1,4 @@
-export class Range {
+export class VirtualScrollRange {
 
     public skip: number;
 
@@ -9,7 +9,7 @@ export class Range {
         this.take = take;
     }
 
-    isEqual(range: Range): boolean {
+    isEqual(range: VirtualScrollRange): boolean {
         return this.skip === range.skip && this.take === range.take;
     }
 }
