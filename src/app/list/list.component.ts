@@ -5,7 +5,7 @@ import { ListService } from '../list.service';
 import { ListItem } from '../list-item';
 import { Range } from '../rb-virtual-scroll/virtual-scroll/range';
 import { Item } from '../rb-virtual-scroll/virtual-scroll/item';
-import { VirtualScrollItems } from '../rb-virtual-scroll/virtual-scroll/virtual-scroll-items';
+//import { VirtualScrollItems } from '../rb-virtual-scroll/virtual-scroll/virtual-scroll-items';
 
 @Component({
   selector: 'app-list',

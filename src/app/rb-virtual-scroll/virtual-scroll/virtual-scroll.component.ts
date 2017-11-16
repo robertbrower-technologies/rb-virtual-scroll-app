@@ -5,7 +5,7 @@ import 'rxjs/add/operator/debounceTime';
 import { Range } from './range';
 import { Item } from './item';
 import { VirtualScrollItemDirective } from './virtual-scroll-item.directive';
-import { VirtualScrollItems } from './virtual-scroll-items';
+//import { VirtualScrollItems } from './virtual-scroll-items';
 
 @Component({
   selector: 'virtual-scroll',
@@ -33,12 +33,14 @@ export class VirtualScrollComponent implements OnInit {
   @Input()
   set items(value: Array<any>) {
     this._items = value;
-    
-    // let scrollDirectionChangeModifier =
-    //   this.scrollDirection !== this.lastScrollDirection ? this.itemHeight * this.scrollDirection * -1 : 0;
-    this.marginTop = this.marginTop % this.itemHeight;// + scrollDirectionChangeModifier;
-    //this.scrollDirection = 0;
-    //console.log(`VirtualScrollComponent set items this.scrollDirection=${this.scrollDirection} this.lastScrollDirection=${this.lastScrollDirection} scrollDirectionChangeModifier=${scrollDirectionChangeModifier} this.marginTop=${this.marginTop}`);
+    let remainder = this.marginTop % this.itemHeight;
+    console.log(`VirtualScrollComponent set items this.marginTop=${this.marginTop} remainder=${remainder}`);
+    //this.marginTop = this.marginTop % this.itemHeight;// + scrollDirectionChangeModifier;
+    let scrollDirectionChangeModifier =
+      this.scrollDirection !== this.lastScrollDirection ? this.itemHeight * this.scrollDirection * -1 : 0;
+    this.marginTop = remainder + scrollDirectionChangeModifier;
+    this.scrollDirection = 0;
+    console.log(`VirtualScrollComponent set items this.scrollDirection=${this.scrollDirection} this.lastScrollDirection=${this.lastScrollDirection} scrollDirectionChangeModifier=${scrollDirectionChangeModifier} this.marginTop=${this.marginTop}`);
   }
 
   private _range: Range = new Range(0, 0);
@@ -59,13 +61,13 @@ export class VirtualScrollComponent implements OnInit {
 
   public scrollTop: number = 0;
 
-  // private scrollChange: number = 0;
+  private scrollChange: number = 0;
 
-  // private scrollDirection: number = 0;
+  private lastScrollChange: number = 0;
 
-  // private lastScrollDirection: number = 0;
+  private scrollDirection: number = 0;
 
-  // private lastScrollChange: number = 0;
+  private lastScrollDirection: number = 0;
 
   public numVisibleItems: number = 0;
 
@@ -131,14 +133,16 @@ export class VirtualScrollComponent implements OnInit {
       this.updateScrolling(true);
       this.marginTop += lastScrollTop - this.scrollTop;
       
-      // this.lastScrollChange = this.scrollChange;
-      // this.scrollChange = lastScrollTop - this.scrollTop;
-      // this.lastScrollDirection = this.scrollDirection;
-      // if (this.lastScrollChange >= 0 && this.scrollChange < 0) {
-      //   this.scrollDirection = -1;
-      // } else if (this.lastScrollChange <= 0 && this.scrollChange > 0) {
-      //   this.scrollDirection = 1;
-      // }
+      if (this.scrollDirection === 0) {
+        this.lastScrollChange = this.scrollChange;
+        this.scrollChange = lastScrollTop - this.scrollTop;
+        this.lastScrollDirection = this.scrollDirection;
+        if (this.lastScrollChange >= 0 && this.scrollChange < 0) {
+          this.scrollDirection = -1;
+        } else if (this.lastScrollChange <= 0 && this.scrollChange > 0) {
+          this.scrollDirection = 1;
+        }
+      }
             
     }
 
